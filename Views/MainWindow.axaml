@@ -4,15 +4,66 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:ScottPlot="clr-namespace:ScottPlot.Avalonia;assembly=ScottPlot.Avalonia"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" Width="1100" Height="850"
         x:Class="AvaloniaApplication1.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
         Title="AvaloniaApplication1">
 
-    <Design.DataContext>
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
 
-	<ScottPlot:AvaPlot Content="{Binding AvaPlot}"/>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="30"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="50"/>
+			<RowDefinition Height="70"/>
+		</Grid.RowDefinitions>
+
+		<StackPanel Orientation="Horizontal">
+			<CheckBox Content="IsRun"
+					  IsChecked="{Binding Run}"/>
+			<CheckBox Content="Auto"
+					  IsChecked="{Binding Auto}"/>
+		</StackPanel>
+					
+		
+		<ScottPlot:AvaPlot Content="{Binding AvaPlot}"
+						   Grid.Row="1"/>
+		<Border BorderBrush="Red" Grid.Row="2"
+				BorderThickness="1">
+			<ScrollBar Orientation="Horizontal"
+					   Minimum="{Binding SizeScroll}" Maximum="{Binding MaximumScroll, Mode=TwoWay}"
+					   Value="{Binding ValueScroll, Mode=TwoWay}"
+					   ViewportSize="{Binding SizeScroll, Mode=TwoWay}"
+					   Name="AScrollBar"
+					   >
+			</ScrollBar>
+		</Border>
+		<StackPanel Orientation="Vertical"
+					Grid.Row="3" >
+			<StackPanel Orientation="Horizontal">
+				<TextBlock Text="Maximum = "/>
+				<TextBlock
+						Text="{Binding MaximumScroll}"/>
+			</StackPanel>
+			<StackPanel Orientation="Horizontal">
+				<TextBlock Text="Value = "/>
+				<TextBlock
+						Text="{Binding ValueScroll}"/>
+			</StackPanel>
+			<StackPanel Orientation="Horizontal">
+				<TextBlock Text="Size = "/>
+				<TextBlock
+						Text="{Binding SizeScroll}"/>
+			</StackPanel>
+			<!--<StackPanel Orientation="Horizontal">
+				<TextBlock Text="MinimumScroll = "/>
+				<TextBlock
+						Text="{Binding MinimumScroll}"/>
+			</StackPanel>-->
+			
+		</StackPanel>
+		
+
+	</Grid>
 
 </Window>

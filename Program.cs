@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.ReactiveUI;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 
 namespace AvaloniaApplication1
@@ -11,14 +12,34 @@ namespace AvaloniaApplication1
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
         // yet and stuff might break.
         [STAThread]
-        public static void Main(string[] args) => BuildAvaloniaApp()
-            .StartWithClassicDesktopLifetime(args);
+        public static void Main(string[] args)
+        {
+            try
+            {
+                BuildAvaloniaApp(args)
+                            .StartWithClassicDesktopLifetime(args);
+            }
+            catch(Exception ex)
+            {
+
+            }
+        }
 
         // Avalonia configuration, don't remove; also used by visual designer.
-        public static AppBuilder BuildAvaloniaApp()
-            => AppBuilder.Configure<App>()
+        public static AppBuilder? BuildAvaloniaApp(string[] args)
+        {
+            try
+            {
+                return AppBuilder.Configure<App>()
                 .UsePlatformDetect()
                 .LogToTrace()
                 .UseReactiveUI();
+            }
+            catch (Exception ex) { }
+
+            return null;
+        }
+          
+        
     }
 }
