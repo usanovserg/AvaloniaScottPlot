@@ -29,4 +29,9 @@
     <PackageReference Include="ScottPlot.Avalonia" Version="4.1.62" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.6.1" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="ControllerExChanges">
+      <HintPath>..\..\TP-PRO\ControllerExChanges\bin\Release\net6.0\publish\ControllerExChanges.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>
