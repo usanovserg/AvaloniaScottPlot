@@ -23,6 +23,7 @@
 					  IsChecked="{Binding Run}"/>
 			<CheckBox Content="Auto"
 					  IsChecked="{Binding Auto}"/>
+			<TextBlock Text="{Binding State}"/>
 		</StackPanel>
 					
 		

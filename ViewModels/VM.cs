@@ -1,15 +1,24 @@
 using Avalonia.Threading;
 using AvaloniaApplication1.Entity;
+using ControllerExChanges.Controller;
+using ControllerExChanges.Entity;
+using ControllerExChanges.Enums;
+using ControllerExChanges.Interfaces;
 using ScottPlot;
 using ScottPlot.Avalonia;
 using ScottPlot.Plottable;
 using ScottPlot.Ticks;
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Timers;
 
 namespace AvaloniaApplication1.ViewModels
@@ -27,16 +36,56 @@ namespace AvaloniaApplication1.ViewModels
             Timer timer = new Timer();
             timer.Elapsed += Timer_Elapsed;
             timer.Interval = 200;
-            timer.Start();
+            //timer.Start();
+
+            ILogger log = BuildLogger();
+            _logger = log.ForContext<VM>();
+
+            Controller controller = Controller.GetController(log);
+
+            _connector = controller.CreateConnector(ExchangeType.LiveFutures);
+
+            if (_connector != null)
+            {
+                Task.Run(() =>
+                {
+                    ConnectParametrs parametrs = _connector.ConnectParametrs;
+
+                    parametrs.ExchangeType = ExchangeType.RandomConnector;
+                    parametrs.Login = "serg-225@mail.ru";
+                    parametrs.Password = "=Ss*#]Vt";
+                    parametrs.Path = "http://193.161.214.142:8081";
 
 
+                    _connector.ConnectStatusChangeEvent += _connector_ConnectStatusChangeEvent;
+
+                    _connector.NewTradeEvent += _connector_NewTradeEvent;
+
+                    _connector.SecuritiesChangeEvent += _connector_SecuritiesChangeEvent;
+                    State = _connector.Connect().Result;
+                });
+            }            
         }
+
+        
 
         static int _count = 0;
 
         #region Properties ==================================================================================================
 
         public AvaPlot AvaPlot => _avaPlot;
+
+        public ConnectStatus State
+        {
+            get => _state;
+
+            set
+            {
+                _state = value;
+                OnPropertyChanged(nameof(State));
+            }
+        }
+        ConnectStatus _state = ConnectStatus.Disconnect;
 
         public double MaximumScroll
         {
@@ -131,7 +180,9 @@ namespace AvaloniaApplication1.ViewModels
 
         AvaPlot _avaPlot;
 
-        //ScatterPlotList<OHLC> _plotList;
+        ILogger _logger;
+
+        IConnector _connector;
 
         double _lastPrice = 1000;
 
@@ -163,6 +214,30 @@ namespace AvaloniaApplication1.ViewModels
 
         #region Methods ======================================================================================================
 
+        private void _connector_ConnectStatusChangeEvent(ConnectStatus status)
+        {
+            State = status;
+        }
+
+        private void _connector_NewTradeEvent(Trade trade)
+        {
+            
+        }
+
+        private async void _connector_SecuritiesChangeEvent(System.Collections.Concurrent.ConcurrentDictionary<string, Security> securities)
+        {
+            if (securities == null
+                || securities.Count == 0) return;
+
+            Security? security;
+
+            if (securities.TryGetValue("2678455", out security))
+            {
+                bool res = await _connector.SubscribeToSecurity(security);
+
+                Debug.WriteLine("SubscribeToSecurity " + security.Name + " res = " + res);
+            }
+        }
 
         private void Init()
         {
@@ -238,7 +313,7 @@ namespace AvaloniaApplication1.ViewModels
             int vola = _rnd.Next(30, 50);
             int vola2 = 1;
 
-            double h = _lastPrice + vola - _rnd.Next(vola2, vola);
+            double h = _lastPrice + vola*1.02 - _rnd.Next(vola2, vola);
             double c = h - _rnd.Next(vola2, vola);
             double l = c - _rnd.Next(vola2, vola);
 
@@ -346,6 +421,22 @@ namespace AvaloniaApplication1.ViewModels
         private void SetDateTimes(int count)
         {
             _avaPlot.Plot.XAxis.ManualTickPositions(_lineDateTime.Ints, _lineDateTime.GetLineDateTimes(count));
+        }
+
+        private ILogger BuildLogger()
+        {
+            if (!Directory.Exists(@"Log"))
+            {
+                Directory.CreateDirectory(@"Log");
+            }
+
+            ILogger log = new LoggerConfiguration()
+                        .MinimumLevel.Debug()
+                        .WriteTo.File(new CompactJsonFormatter(),
+                                        @"Log\" + DateTime.Now.ToShortDateString() + "_file.log", LevelAlias.Minimum, 104857600L)
+                        .CreateLogger();
+
+            return log;
         }
 
         #endregion
